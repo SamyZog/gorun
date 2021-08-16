@@ -1,7 +1,11 @@
 import { combineReducers, createStore } from "redux";
-import interfaceStore from "./interface/reducer";
+import { authReducer } from "./auth";
+import { interfaceReducer } from "./interface/interface";
 
-const rootreducer = combineReducers({ interfaceStore });
+const rootreducer = combineReducers({
+	interface: interfaceReducer,
+	auth: authReducer,
+});
 
 const store = createStore(rootreducer);
 
