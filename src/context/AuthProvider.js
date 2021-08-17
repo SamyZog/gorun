@@ -14,8 +14,25 @@ export default function AuthProvider(props) {
 		await firebase.auth().sendSignInLinkToEmail(email, { url: "http://localhost:3000/", handleCodeInApp: true });
 	}
 
+	function isSignInLink() {
+		return firebase.auth().isSignInWithEmailLink(window.location.href);
+	}
+
+	async function signInEmailLink(email) {
+		await firebase.auth().signInWithEmailLink(email, window.location.href);
+	}
+
 	async function enterAsGuest() {
 		await firebase.auth().signInAnonymously();
+	}
+
+	function signOut() {
+		firebase.auth().signOut;
+	}
+
+	async function deleteUser() {
+		const user = firebase.auth().currentUser;
+		await user.delete();
 	}
 
 	useEffect(() => {
@@ -32,9 +49,22 @@ export default function AuthProvider(props) {
 		return unsubscribe;
 	}, []);
 
+	useEffect(() => {
+		const handle = setInterval(async () => {
+			const user = firebase.auth().currentUser;
+			if (user) await user.getIdToken(true);
+		}, 10 * 60 * 1000);
+
+		return () => clearInterval(handle);
+	}, []);
+
 	const value = {
 		sendEmailLink,
 		enterAsGuest,
+		deleteUser,
+		signOut,
+		isSignInLink,
+		signInEmailLink,
 	};
 
 	return <Auth value={value}>{props.children}</Auth>;

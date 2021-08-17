@@ -13,17 +13,17 @@ import {
 } from "@chakra-ui/react";
 import { useRouter } from "next/dist/client/router";
 import { useRef } from "react";
-import { BiArrowToRight, BiInfoCircle, BiUser } from "react-icons/bi";
+import { BiArrowFromBottom, BiInfoCircle, BiUser } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../context/AuthProvider";
 import { setEmailInputValue } from "../store/auth";
 import { toggleDisabled, toggleEmailTooltip } from "../store/interface/interface";
 
-export default function SignUpForm() {
+export default function SignUpForm(props) {
 	const router = useRouter();
 	const isTooltipOpen = useSelector((state) => state.interface.toolTip);
-	const emailValue = useSelector((state) => state.auth.email);
 	const isDisabled = useSelector((state) => state.interface.disabled);
+	const emailValue = useSelector((state) => state.auth.email);
 	const dispatch = useDispatch();
 	const { sendEmailLink, enterAsGuest } = useAuth();
 	const toast = useToast();
@@ -42,12 +42,13 @@ export default function SignUpForm() {
 					id: guestAuthSuccessId,
 					position: "top",
 					status: "success",
-					description: "You have successfully signed in as a guest",
+					description: "Signed in as a guest, you will be redirected shortly",
 					duration: 4000,
 					isClosable: true,
 					onCloseComplete() {
 						dispatch(toggleDisabled(false));
-						router.push("/");
+						dispatch(setEmailInputValue(""));
+						router.reload();
 					},
 				});
 			}
@@ -70,19 +71,19 @@ export default function SignUpForm() {
 
 	async function sendLink() {
 		try {
-			await sendEmailLink(email);
+			await sendEmailLink(emailValue);
 			dispatch(toggleDisabled(true));
 			if (!toast.isActive(emailAuthSuccessId)) {
 				toast({
 					id: emailAuthSuccessId,
 					position: "top",
 					status: "success",
-					description: `We sent a link to ${emailValue}, close to continue`,
+					description: `We sent a link to ${emailValue}, close this notification to continue`,
 					duration: 4000,
 					isClosable: true,
 					onCloseComplete() {
-						localStorage.setItem("runner-email", emailValue);
 						dispatch(toggleDisabled(false));
+						localStorage.setItem("gorun-email", emailValue);
 						dispatch(setEmailInputValue(""));
 						router.push("/");
 					},
@@ -106,44 +107,46 @@ export default function SignUpForm() {
 	}
 
 	return (
-		<FormControl as="form">
-			<VStack spacing="20px">
-				<InputGroup w="90%">
-					<Input
-						ref={inputRef}
-						type="email"
-						placeholder="Email"
-						isRequired
-						value={emailValue}
-						onChange={(e) => dispatch(setEmailInputValue(e.target.value))}
-					/>
-					<InputRightAddon
-						children={
-							<Tooltip
-								isOpen={isTooltipOpen}
-								shouldWrapChildren
-								hasArrow
-								label="We only need your email to sign you up, no passwords here!"
-								aria-label="A tooltip">
-								<Icon
-									w={6}
-									h={6}
-									as={BiInfoCircle}
-									onMouseEnter={() => dispatch(toggleEmailTooltip(true))}
-									onMouseLeave={() => dispatch(toggleEmailTooltip(false))}
-								/>
-							</Tooltip>
-						}
-					/>
-				</InputGroup>
-				<Button w="90%" leftIcon={<BiArrowToRight />} onClick={sendLink} isDisabled={isDisabled}>
-					SIGN UP WITH EMAIL
-				</Button>
-				<Text>OR</Text>
-				<Button w="90%" leftIcon={<BiUser />} isDisabled={isDisabled}>
-					ENTER AS GUEST
-				</Button>
-			</VStack>
-		</FormControl>
+		<form>
+			<FormControl>
+				<VStack spacing="20px">
+					<InputGroup w="90%">
+						<Input
+							ref={inputRef}
+							type="email"
+							placeholder="Email"
+							isRequired
+							value={emailValue}
+							onChange={(e) => dispatch(setEmailInputValue(e.target.value))}
+						/>
+						<InputRightAddon
+							children={
+								<Tooltip
+									isOpen={isTooltipOpen}
+									shouldWrapChildren
+									hasArrow
+									label="We only need your email to sign you up, no need for passwords here!"
+									aria-label="A tooltip">
+									<Icon
+										w={6}
+										h={6}
+										as={BiInfoCircle}
+										onMouseEnter={() => dispatch(toggleEmailTooltip(true))}
+										onMouseLeave={() => dispatch(toggleEmailTooltip(false))}
+									/>
+								</Tooltip>
+							}
+						/>
+					</InputGroup>
+					<Button w="90%" leftIcon={<BiArrowFromBottom />} onClick={sendLink} isDisabled={isDisabled}>
+						ENTER WITH EMAIL
+					</Button>
+					<Text>OR</Text>
+					<Button w="90%" leftIcon={<BiUser />} isDisabled={isDisabled} onClick={signIn}>
+						ENTER AS GUEST
+					</Button>
+				</VStack>
+			</FormControl>
+		</form>
 	);
 }

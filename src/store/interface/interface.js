@@ -10,7 +10,7 @@ export const toggleEmailTooltip = (payload) => ({
 });
 
 export const toggleDisabled = (payload) => ({
-	type: TOGGLE_SPINNER,
+	type: TOGGLE_DISABLED,
 	payload,
 });
 
