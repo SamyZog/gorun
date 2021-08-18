@@ -1,17 +1,9 @@
-import { Button } from "@chakra-ui/react";
 import { parseCookies } from "nookies";
-import { useAuth } from "../context/AuthProvider";
 import { firebaseAdmin } from "../firebase/firebaseAdmin";
+import HomeRoute from "../routes/HomeRoute";
 
 export default function Home(props) {
-	const { deleteUser, signOut } = useAuth();
-
-	return (
-		<>
-			<Button>SIGN OUT</Button>
-			<Button onClick={deleteUser}>DELETE</Button>
-		</>
-	);
+	return <HomeRoute />;
 }
 
 export async function getServerSideProps(ctx) {

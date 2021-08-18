@@ -1,9 +1,7 @@
 import { combineReducers, createStore } from "redux";
-import { authReducer } from "./auth";
-import { interfaceReducer } from "./interface/interface";
+import { authReducer } from "./auth/auth";
 
 const rootreducer = combineReducers({
-	interface: interfaceReducer,
 	auth: authReducer,
 });
 

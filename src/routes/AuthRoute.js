@@ -1,31 +1,19 @@
-import {
-	Divider,
-	Heading,
-	HStack,
-	Icon,
-	Modal,
-	ModalBody,
-	ModalContent,
-	ModalHeader,
-	ModalOverlay,
-	Text,
-	VStack,
-} from "@chakra-ui/react";
+import { Box, Center, Divider, Heading, HStack, Icon, SlideFade, Text, VStack } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { GiRunningShoe } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
 import SignInForm from "../components/SignInForm";
 import SignUpForm from "../components/SignUpForm";
 import { useAuth } from "../context/AuthProvider";
-import { setEmailInputValue, setFormType } from "../store/auth";
+import { setEmailInputValue, setFormType } from "../store/auth/auth";
 
 export default function AuthRoute(props) {
 	const { isSignInLink } = useAuth();
-	const formType = useSelector((state) => state.auth.formType);
+	const { formType } = useSelector((state) => state.auth);
 	const dispatch = useDispatch();
 
 	useEffect(() => {
-		if (isSignInLink()) {
+		if (isSignInLink(window.location.href)) {
 			const email = localStorage.getItem("gorun-email");
 			dispatch(setEmailInputValue(email || ""));
 			dispatch(setFormType("signin"));
@@ -35,21 +23,18 @@ export default function AuthRoute(props) {
 	}, []);
 
 	return (
-		<Modal isOpen={true} isCentered motionPreset="slideInBottom">
-			<ModalOverlay />
-			<ModalContent textAlign="center">
-				<ModalHeader>
-					<VStack spacing="20px">
-						<HStack spacing="5px">
-							<Icon as={GiRunningShoe} h={10} w={10} scale="-1" />
-							<Heading as="h1">GORUN</Heading>
-						</HStack>
-						<Divider />
-						<Text>{formType === "signup" ? "SIGN UP" : "SIGN IN"}</Text>
-					</VStack>
-				</ModalHeader>
-				<ModalBody pb="30px">{formType === "signup" ? <SignUpForm /> : <SignInForm />}</ModalBody>
-			</ModalContent>
-		</Modal>
+		<SlideFade in={true} direction="bottom">
+			<Center h="100vh">
+				<VStack spacing="20px" maxW="600px">
+					<HStack spacing="5px">
+						<Heading as="h1">GORUN</Heading>
+						<Icon as={GiRunningShoe} h={10} w={10} />
+					</HStack>
+					<Divider />
+					<Text>{formType === "signin" ? "SIGN IN" : "SIGN UP"}</Text>
+					<Box pb="30px">{formType === "signin" ? <SignInForm /> : <SignUpForm />}</Box>
+				</VStack>
+			</Center>
+		</SlideFade>
 	);
 }

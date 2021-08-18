@@ -1,57 +1,46 @@
-import { Button, FormControl, Input, useToast, VStack } from "@chakra-ui/react";
+import { Button, FormControl, Input, Text, useToast, VStack } from "@chakra-ui/react";
 import { useRouter } from "next/dist/client/router";
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { BiArrowToRight } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../context/AuthProvider";
-import { setEmailInputValue } from "../store/auth";
-import { toggleDisabled } from "../store/interface/interface";
+import { setEmailInputValue, setSubmitButtonState } from "../store/auth/auth";
+import { displayToast } from "../utils/helpers";
 
 export default function SignInForm(props) {
 	const router = useRouter();
-	const emailValue = useSelector((state) => state.auth.email);
-	const isDisabled = useSelector((state) => state.interface.disabled);
-	const dispatch = useDispatch();
-	const { signInEmailLink } = useAuth();
 	const inputRef = useRef();
 	const toast = useToast();
-	const successSignInId = "1";
-	const errorSignInId = "2";
+	const { signInEmailLink } = useAuth();
+	const { emailInputValue, submitButton } = useSelector((state) => state.auth);
+	const dispatch = useDispatch();
+	const signInSuccessToastId = 1;
+	const signInErrorToastId = 2;
+
+	function handleInputChange(e) {
+		dispatch(setEmailInputValue(e.target.value));
+	}
 
 	async function signIn() {
 		try {
-			await signInEmailLink(emailValue);
-			dispatch(toggleDisabled(true));
-			if (!toast.isActive(successSignInId)) {
-				toast({
-					id: successSignInId,
-					position: "top",
-					status: "success",
-					description: "Signed in successfully, you will be redirected shortly",
-					duration: 4000,
-					isClosable: true,
-					onCloseComplete() {
-						dispatch(toggleDisabled(false));
-						dispatch(setEmailInputValue(""));
-						localStorage.removeItem("gorun-email");
-						router.reload();
-					},
-				});
-			}
+			await signInEmailLink(emailInputValue);
+			dispatch(setSubmitButtonState(true));
+			displayToast(
+				toast,
+				signInSuccessToastId,
+				"success",
+				"Signed in successfully, you will be redirected shortly.",
+				() => {
+					dispatch(setSubmitButtonState(false));
+					dispatch(setEmailInputValue(""));
+					// localStorage.removeItem("gorun-email");
+					router.reload();
+				},
+			);
 		} catch ({ message }) {
-			if (!toast.isActive(errorSignInId)) {
-				toast({
-					id: errorSignInId,
-					position: "top",
-					status: "error",
-					description: message,
-					duration: 4000,
-					isClosable: true,
-					onCloseComplete() {
-						inputRef.current.focus();
-					},
-				});
-			}
+			displayToast(toast, signInErrorToastId, "error", message, () => {
+				inputRef.current.focus();
+			});
 		}
 	}
 
@@ -60,17 +49,20 @@ export default function SignInForm(props) {
 			<FormControl>
 				<VStack spacing="20px">
 					<Input
-						w="90%"
+						w="100%"
 						ref={inputRef}
 						type="email"
 						placeholder="Email"
 						isRequired
-						value={emailValue}
-						onChange={(e) => dispatch(setEmailInputValue(e.target.value))}
+						value={emailInputValue}
+						onChange={handleInputChange}
 					/>
-					<Button w="90%" leftIcon={<BiArrowToRight />} onClick={signIn} isDisabled={isDisabled}>
-						SIGN IN
+					<Button w="100%" leftIcon={<BiArrowToRight />} onClick={signIn} isDisabled={submitButton}>
+						COMPLETE SIGN IN
 					</Button>
+					<Text fontSize="10px" textAlign="center">
+						Made by SZ &copy;
+					</Text>
 				</VStack>
 			</FormControl>
 		</form>
