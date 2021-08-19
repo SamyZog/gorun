@@ -3,9 +3,9 @@ import { useRouter } from "next/dist/client/router";
 import { useRef } from "react";
 import { BiArrowToRight } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../context/AuthProvider";
-import { setEmailInputValue, setSubmitButtonState } from "../store/auth/auth";
-import { displayToast } from "../utils/helpers";
+import { useAuth } from "../../context/AuthProvider";
+import { setEmailInputValue, setSubmitButtonState } from "../../store/auth/auth";
+import { displayToast } from "../../utils/helpers";
 
 export default function SignInForm(props) {
 	const router = useRouter();
@@ -33,7 +33,6 @@ export default function SignInForm(props) {
 				() => {
 					dispatch(setSubmitButtonState(false));
 					dispatch(setEmailInputValue(""));
-					// localStorage.removeItem("gorun-email");
 					router.reload();
 				},
 			);

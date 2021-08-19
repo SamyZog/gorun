@@ -2,8 +2,8 @@ import { Box, Center, Divider, Heading, HStack, Icon, SlideFade, Text, VStack } 
 import { useEffect } from "react";
 import { GiRunningShoe } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
-import SignInForm from "../components/SignInForm";
-import SignUpForm from "../components/SignUpForm";
+import SignInForm from "../components/Auth/SignInForm";
+import SignUpForm from "../components/Auth/SignUpForm";
 import { useAuth } from "../context/AuthProvider";
 import { setEmailInputValue, setFormType } from "../store/auth/auth";
 
@@ -24,11 +24,11 @@ export default function AuthRoute(props) {
 
 	return (
 		<SlideFade in={true} direction="bottom">
-			<Center h="100vh">
+			<Center h="100vh" color="var(--primary)">
 				<VStack spacing="20px" maxW="600px">
 					<HStack spacing="5px">
 						<Heading as="h1">GORUN</Heading>
-						<Icon as={GiRunningShoe} h={10} w={10} />
+						<Icon as={GiRunningShoe} fontSize="30px" />
 					</HStack>
 					<Divider />
 					<Text>{formType === "signin" ? "SIGN IN" : "SIGN UP"}</Text>

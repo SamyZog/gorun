@@ -15,9 +15,9 @@ import { useRouter } from "next/dist/client/router";
 import { useRef, useState } from "react";
 import { BiArrowFromBottom, BiInfoCircle, BiUser } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../context/AuthProvider";
-import { setEmailInputValue, setSubmitButtonState } from "../store/auth/auth";
-import { displayToast } from "../utils/helpers";
+import { useAuth } from "../../context/AuthProvider";
+import { setEmailInputValue, setSubmitButtonState } from "../../store/auth/auth";
+import { displayToast } from "../../utils/helpers";
 
 export default function SignUpForm(props) {
 	const { enterAsGuest, sendEmailLink } = useAuth();
@@ -32,8 +32,8 @@ export default function SignUpForm(props) {
 	const signInSuccessToastId = 3;
 	const signInErrorToastId = 3;
 
-	function handleTooltipVisibility() {
-		setIsTooltip((state) => !state);
+	function handleTooltipVisibility(bool) {
+		setIsTooltip((state) => bool);
 	}
 
 	async function signIn() {
@@ -92,6 +92,7 @@ export default function SignUpForm(props) {
 							children={
 								<Tooltip
 									isOpen={isTooltip}
+									bg="gray.900"
 									shouldWrapChildren
 									hasArrow
 									placement="top"
@@ -101,8 +102,8 @@ export default function SignUpForm(props) {
 									<Icon
 										fontSize="25px"
 										as={BiInfoCircle}
-										onMouseEnter={handleTooltipVisibility}
-										onMouseLeave={handleTooltipVisibility}
+										onMouseEnter={() => handleTooltipVisibility(true)}
+										onMouseLeave={() => handleTooltipVisibility(false)}
 									/>
 								</Tooltip>
 							}

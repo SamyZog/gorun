@@ -12,6 +12,9 @@ export default global = extendTheme({
 				minW: "250px",
 				minH: "100vh",
 			},
+			".mapbox-ctrl-top-right button": {
+				display: "none",
+			},
 		},
 	},
 });
