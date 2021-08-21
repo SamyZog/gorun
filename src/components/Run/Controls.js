@@ -1,163 +1,127 @@
 import { Button, Flex, forwardRef, IconButton, useToast } from "@chakra-ui/react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AiOutlineReload } from "react-icons/ai";
 import { BsFillPauseFill, BsPlayFill, BsStopFill } from "react-icons/bs";
-import { GiRunningShoe } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
-import { setCountDownPhase, setGeoObject, setGpsError, setGpsState, setPause, setRunStart } from "../../store/map/map";
+import {
+	setCountDownPhase,
+	setGeoObject,
+	setGpsError,
+	setGpsState,
+	setPause,
+	setRunStart,
+	setTelemetry,
+} from "../../store/map/map";
 import { displayToast } from "../../utils/helpers";
-
-const data = {
-	type: "Feature",
-	properties: {},
-	geometry: {
-		type: "LineString",
-		coordinates: [],
-	},
-};
-const layer = {
-	id: "run-path",
-	type: "line",
-	source: "run-path",
-	layout: {
-		"line-join": "round",
-		"line-cap": "round",
-	},
-	paint: {
-		"line-color": "#03c4a1",
-		"line-width": 4,
-	},
-};
 
 function Controls(props, ref) {
 	const { countDown, timer } = props;
-	const { isCountdown, isRunGoing, isPaused, isTelemetryOpen, isGpsError, geoObject } = useSelector(
-		(state) => state.map,
-	);
+	const {
+		isCountdown,
+		isRunGoing,
+		isPaused,
+		isGpsError,
+		telemetry: { geoStamps },
+	} = useSelector((state) => state.map);
+	const [runMap, setRunMap] = useState(null);
 	const dispatch = useDispatch();
 	const toast = useToast();
+	const watchRef = useRef();
+	const isRunGoingRef = useRef(isRunGoing);
 
-	const [runMap, setRunMap] = useState(null);
-
-	const deniedToastId = 1;
-	const promptToastId = 2;
-
-	async function start() {
-		const { state } = await navigator.permissions.query({ name: "geolocation" });
-		switch (state) {
-			case "denied":
-				displayToast(toast, deniedToastId, "error", "GPS blocked, please enable GPS in browser settings!");
-				dispatch(setGpsState(false));
-				break;
-			case "granted":
-				dispatch(setGpsState(true));
-				startSequence();
-				break;
-			case "prompt":
-				displayToast(
-					toast,
-					promptToastId,
-					"warning",
-					"To begin your run please enable GPS in browser settings!",
-				);
-				dispatch(setGpsState(false));
-				navigator.geolocation.getCurrentPosition(
-					() => {
-						dispatch(setGpsState(true));
-						startSequence();
-					},
-					() => dispatch(setGpsState(false)),
-				);
-				break;
-		}
-	}
-
-	function initiateMap() {
-		navigator.geolocation.getCurrentPosition(({ coords }) => {
-			const { longitude, latitude } = coords;
-			mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
-			const map = new mapboxgl.Map({
-				container: ref.current,
-				style: "mapbox://styles/samyzog/cks4euoh03az218kcmg5g1elw",
-				center: [longitude, latitude],
-				zoom: 17.5,
-				attributionControl: false,
-			});
-
-			const geolocate = new mapboxgl.GeolocateControl({
-				positionOptions: {
-					enableHighAccuracy: true,
-				},
-				fitBoundsOptions: { maxZoom: 17.5 },
-				trackUserLocation: true,
-				showUserHeading: true,
-				showAccuracyCircle: false,
-			});
-
-			map.addControl(geolocate);
-			map.on("load", () => {
-				geolocate.trigger();
-				map.addSource("run-path", { type: "geojson", data });
-				map.addLayer(layer);
-			});
-			dispatch(setGeoObject(geolocate));
-			setRunMap((state) => map);
+	function initiateMap(coords) {
+		const { longitude, latitude } = coords;
+		mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
+		const map = new mapboxgl.Map({
+			container: ref.current,
+			style: "mapbox://styles/samyzog/cks4euoh03az218kcmg5g1elw",
+			center: [longitude, latitude],
+			zoom: 17.5,
+			attributionControl: false,
+			locale: "en",
 		});
+		const geolocate = new mapboxgl.GeolocateControl({
+			positionOptions: {
+				enableHighAccuracy: true,
+			},
+			fitBoundsOptions: { maxZoom: 17.5 },
+			trackUserLocation: true,
+			showUserHeading: true,
+			showAccuracyCircle: false,
+		});
+
+		map.addControl(geolocate);
+		map.on("load", () => {
+			geolocate.trigger();
+			map.addSource("run-path", {
+				type: "geojson",
+				data: {
+					type: "Feature",
+					properties: {},
+					geometry: {
+						type: "LineString",
+						coordinates: [],
+					},
+				},
+			});
+			map.addLayer({
+				id: "run-path",
+				type: "line",
+				source: "run-path",
+				layout: {
+					"line-join": "round",
+					"line-cap": "round",
+				},
+				paint: {
+					"line-color": "#03c4a1",
+					"line-width": 4,
+				},
+			});
+		});
+		dispatch(setGeoObject(geolocate));
+		setRunMap(map);
 	}
 
-	function startSequence() {
-		initiateMap();
-		countDown.start();
-		dispatch(setCountDownPhase(true));
-	}
-
-	async function startTracking() {
-		if (isGpsError) {
-			return;
-		}
-		if (isCountdown) {
-			dispatch(setCountDownPhase(false));
-		}
-		dispatch(setRunStart(true));
-		timer.start();
+	function runStart() {
 		dispatch(setPause(false));
-		geo.on("geolocate", watchSucces);
-		geo.on("error", watchError);
+		if (isRunGoingRef.current) {
+			timer.start();
+		}
+		navigator.geolocation.clearWatch(watchRef.current);
+		watchRef.current = navigator.geolocation.watchPosition(success, error);
 	}
 
-	function pauseTracking() {
+	function runPause() {
 		timer.pause();
 		dispatch(setPause(true));
-		geo.off("geolocate", watchSucces);
-		geo.off("error", watchError);
+		navigator.geolocation.clearWatch(watchRef.current);
 	}
 
-	function watchSucces({ coords }) {
-		const { longitude, latitude } = coords;
+	function runStop() {}
 
-		console.log(isTelemetryOpen);
-
-		if (runMap.getSource("run-path")) {
-			runMap.getSource("run-path").setData({
-				type: "Feature",
-				properties: {},
-				geometry: {
-					type: "LineString",
-					coordinates: [],
-				},
-			});
+	function success({ coords }) {
+		dispatch(setGpsState(true));
+		dispatch(setGpsError(false));
+		if (!isRunGoingRef.current) {
+			initiateMap(coords);
+			countDown.start();
+			dispatch(setCountDownPhase(true));
+			return;
 		}
+		const { longitude, latitude } = coords;
+		dispatch(setTelemetry(["geoStamps", { coords: [longitude, latitude], time: Date.now() }]));
 	}
 
-	function watchError({ code }) {
-		pauseTracking();
+	function error({ code }) {
 		dispatch(setGpsState(false));
 		dispatch(setGpsError(true));
+		runPause();
 		let message;
 		switch (code) {
 			case 1:
-				message = "GPS is blocked!";
+				message = "GPS is disabled! Enable in browser settings";
 				break;
 			case 2:
 				message = "Cannot locate device!";
@@ -170,9 +134,31 @@ function Controls(props, ref) {
 	}
 
 	useEffect(() => {
-		countDown.addEventListener("targetAchieved", startTracking);
-		return () => countDown.removeEventListener("targetAchieved", startTracking);
-	}, [geo, runMap]);
+		if (geoStamps.length >= 2) {
+			runMap.getSource("run-path").setData({
+				type: "Feature",
+				properties: {},
+				geometry: {
+					type: "LineString",
+					coordinates: geoStamps.map(({ coords }) => coords),
+				},
+			});
+		}
+	}, [geoStamps]);
+
+	function countDownTargetAchieved() {
+		dispatch(setRunStart(true));
+		dispatch(setCountDownPhase(false));
+		runStart();
+	}
+
+	useEffect(() => {
+		isRunGoingRef.current = isRunGoing;
+		countDown.on("targetAchieved", countDownTargetAchieved);
+		return () => {
+			countDown.removeAllEventListeners();
+		};
+	}, [isRunGoing]);
 
 	return (
 		<Flex
@@ -182,40 +168,55 @@ function Controls(props, ref) {
 			bottom="10%"
 			transform="translatex(-50%)"
 			zIndex="101"
-			style={{ gap: "10px" }}>
-			<Button onClick={() => geo.trigger()}>GEO</Button>
-			{!isRunGoing && !isCountdown && (
-				<IconButton
-					icon={<GiRunningShoe />}
-					fontSize="40px"
-					borderRadius="50%"
-					h="15vh"
-					w="15vh"
-					onClick={start}
-				/>
+			style={{ gap: "15px" }}>
+			{!isCountdown && !isRunGoing && !isGpsError && (
+				<Button fontSize="40px" borderRadius="50%" h="15vh" w="15vh" onClick={runStart}>
+					GO
+				</Button>
 			)}
-			{isRunGoing && !isPaused && (
+
+			{!isPaused && isRunGoing && (
 				<IconButton
 					icon={<BsFillPauseFill />}
 					fontSize="40px"
 					borderRadius="50%"
 					h="15vh"
 					w="15vh"
-					onClick={pauseTracking}
+					onClick={runPause}
 				/>
 			)}
-			{isPaused && (
-				<>
-					<IconButton
-						onClick={startTracking}
-						fontSize="40px"
-						icon={<BsPlayFill />}
-						borderRadius="50%"
-						h="15vh"
-						w="15vh"
-					/>
-					<IconButton fontSize="40px" icon={<BsStopFill />} borderRadius="50%" h="15vh" w="15vh" />
-				</>
+
+			{isPaused && !isGpsError && (
+				<IconButton
+					onClick={runStart}
+					fontSize="40px"
+					icon={<BsPlayFill />}
+					borderRadius="50%"
+					h="15vh"
+					w="15vh"
+				/>
+			)}
+
+			{isGpsError && (
+				<IconButton
+					fontSize="40px"
+					icon={<AiOutlineReload />}
+					borderRadius="50%"
+					h="15vh"
+					w="15vh"
+					onClick={runStart}
+				/>
+			)}
+
+			{(isPaused || isGpsError) && (
+				<IconButton
+					fontSize="40px"
+					icon={<BsStopFill />}
+					borderRadius="50%"
+					h="15vh"
+					w="15vh"
+					onClick={runStop}
+				/>
 			)}
 		</Flex>
 	);

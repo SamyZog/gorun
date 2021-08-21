@@ -7,13 +7,14 @@ import { useAuth } from "../../context/AuthProvider";
 import { setEmailInputValue, setSubmitButtonState } from "../../store/auth/auth";
 import { displayToast } from "../../utils/helpers";
 
-export default function SignInForm(props) {
-	const router = useRouter();
+export default function SignInForm() {
 	const inputRef = useRef();
+	const router = useRouter();
 	const toast = useToast();
 	const { signInEmailLink } = useAuth();
 	const { emailInputValue, submitButton } = useSelector((state) => state.auth);
 	const dispatch = useDispatch();
+
 	const signInSuccessToastId = 1;
 	const signInErrorToastId = 2;
 

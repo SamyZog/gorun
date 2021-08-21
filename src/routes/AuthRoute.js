@@ -1,6 +1,5 @@
-import { Box, Center, Divider, Heading, HStack, Icon, SlideFade, Text, VStack } from "@chakra-ui/react";
+import { Box, Center, Divider, Heading, HStack, SlideFade, Text, VStack } from "@chakra-ui/react";
 import { useEffect } from "react";
-import { GiRunningShoe } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
 import SignInForm from "../components/Auth/SignInForm";
 import SignUpForm from "../components/Auth/SignUpForm";
@@ -28,7 +27,6 @@ export default function AuthRoute(props) {
 				<VStack spacing="20px" maxW="600px">
 					<HStack spacing="5px">
 						<Heading as="h1">GORUN</Heading>
-						<Icon as={GiRunningShoe} fontSize="30px" />
 					</HStack>
 					<Divider />
 					<Text>{formType === "signin" ? "SIGN IN" : "SIGN UP"}</Text>

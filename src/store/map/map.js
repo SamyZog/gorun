@@ -10,6 +10,9 @@ const SET_GPS_STATE = "map/set_gps_state";
 const SET_GPS_ERROR = "map/set_gps_error";
 const SET_COUNTDOWN_PHASE = "map/set_countdown_phase";
 const SET_GEO_OBJECT = "map/set_geo_object";
+const SET_TELEMETRY = "map/set_telemetry";
+const RESET_MAP_STATE = "map/reset_auth";
+const SET_SPEED = "map/set_speed";
 /* -------------------------------------------------------------------------- */
 
 // actions
@@ -53,11 +56,25 @@ export const setGpsError = (payload) => ({
 	type: SET_GPS_ERROR,
 	payload,
 });
+
+export const setTelemetry = ([key, value]) => ({
+	type: SET_TELEMETRY,
+	payload: [key, value],
+});
+
+export const resetAuthState = () => ({
+	type: RESET_MAP_STATE,
+});
+
+export const setSpeed = (payload) => ({
+	type: SET_SPEED,
+	payload,
+});
 /* -------------------------------------------------------------------------- */
 
 // initial state
 /* -------------------------------------------------------------------------- */
-const authState = {
+const mapState = {
 	isDrawerOpen: false,
 	isTelemetryOpen: false,
 	isRunGoing: null,
@@ -67,12 +84,18 @@ const authState = {
 	isGpsError: false,
 	isCountdown: false,
 	geoObject: null,
+	telemetry: {
+		startTime: null,
+		endTime: null,
+		geoStamps: [],
+		speed: 0,
+	},
 };
 /* -------------------------------------------------------------------------- */
 
 // reducer
 /* -------------------------------------------------------------------------- */
-export function mapReducer(state = authState, action) {
+export function mapReducer(state = mapState, action) {
 	switch (action.type) {
 		case SET_DRAWER_STATE:
 			return produce(state, (draft) => {
@@ -85,6 +108,7 @@ export function mapReducer(state = authState, action) {
 		case SET_RUN_START:
 			return produce(state, (draft) => {
 				draft.isRunGoing = action.payload;
+				draft.telemetry.startTime = Date.now();
 			});
 		case SET_PAUSE:
 			return produce(state, (draft) => {
@@ -106,6 +130,20 @@ export function mapReducer(state = authState, action) {
 			return produce(state, (draft) => {
 				draft.geoObject = action.payload;
 			});
+		case SET_TELEMETRY:
+			return produce(state, (draft) => {
+				if (action.payload[0] === "geoStamps") {
+					draft.telemetry[action.payload[0]].push(action.payload[1]);
+					return;
+				}
+				draft.telemetry[action.payload[0]] = action.payload[1];
+			});
+		case SET_SPEED:
+			return produce(state, (draft) => {
+				draft.telemetry.speed = action.payload;
+			});
+		case RESET_MAP_STATE:
+			return mapState;
 		default:
 			return state;
 	}

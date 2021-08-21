@@ -19,21 +19,22 @@ import { useAuth } from "../../context/AuthProvider";
 import { setEmailInputValue, setSubmitButtonState } from "../../store/auth/auth";
 import { displayToast } from "../../utils/helpers";
 
-export default function SignUpForm(props) {
-	const { enterAsGuest, sendEmailLink } = useAuth();
+export default function SignUpForm() {
 	const inputRef = useRef();
 	const router = useRouter();
 	const toast = useToast();
+	const { enterAsGuest, sendEmailLink } = useAuth();
 	const [isTooltip, setIsTooltip] = useState(false);
 	const { emailInputValue, submitButton } = useSelector((state) => state.auth);
 	const dispatch = useDispatch();
+
 	const signUpSuccessToastId = 1;
 	const singUpErrorToastId = 2;
 	const signInSuccessToastId = 3;
 	const signInErrorToastId = 3;
 
 	function handleTooltipVisibility(bool) {
-		setIsTooltip((state) => bool);
+		setIsTooltip(bool);
 	}
 
 	async function signIn() {
@@ -92,12 +93,12 @@ export default function SignUpForm(props) {
 							children={
 								<Tooltip
 									isOpen={isTooltip}
-									bg="gray.900"
 									shouldWrapChildren
 									hasArrow
+									fontWeight="bold"
 									placement="top"
 									w="200px"
-									label="We only need your email to sign you up, no need for passwords here!"
+									label="We only need your email to sign you up!"
 									aria-label="A tooltip">
 									<Icon
 										fontSize="25px"
