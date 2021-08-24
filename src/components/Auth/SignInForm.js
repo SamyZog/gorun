@@ -1,4 +1,4 @@
-import { Button, FormControl, Input, Text, useToast, VStack } from "@chakra-ui/react";
+import { Button, FormControl, Input, Text, useColorMode, useColorModeValue, useToast, VStack } from "@chakra-ui/react";
 import { useRouter } from "next/dist/client/router";
 import { useRef } from "react";
 import { BiArrowToRight } from "react-icons/bi";
@@ -8,6 +8,9 @@ import { setEmailInputValue, setSubmitButtonState } from "../../store/auth/auth"
 import { displayToast } from "../../utils/helpers";
 
 export default function SignInForm() {
+	const { colorMode, toggleColorMode } = useColorMode();
+	const bg = useColorModeValue("gray.400", "gray.900");
+	const color = useColorModeValue("gray.900", "gray.400");
 	const inputRef = useRef();
 	const router = useRouter();
 	const toast = useToast();

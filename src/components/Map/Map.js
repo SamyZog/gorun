@@ -1,6 +1,6 @@
-import { Box, Center, Icon, IconButton, ScaleFade, Text } from "@chakra-ui/react";
+import { Box, Center, Icon, IconButton, ScaleFade, Text, useColorModeValue } from "@chakra-ui/react";
 import useTimer from "easytimer-react-hook";
-import { useRef, useState } from "react";
+import { memo, useRef } from "react";
 import { FaChevronDown, FaRunning } from "react-icons/fa";
 import { MdGpsFixed, MdGpsNotFixed, MdGpsOff } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,37 +9,30 @@ import AlertModal from "./AlertModal";
 import RunControls from "./RunControls";
 import Telemetry from "./Telemetry";
 
-export default function Map() {
+function Map() {
+	const bg = useColorModeValue("gray.400", "gray.900");
+	const color = useColorModeValue("gray.900", "gray.400");
 	const mapRef = useRef();
 	const dispatch = useDispatch();
-	const { isDrawerOpen, isPaused, isRunInProgress, isGps, geolocate } = useSelector((state) => state.map);
-	const [isFullTelemtry, setIsFullTelemetry] = useState(false);
+	const { isDrawerOpen, isPaused, isRunInProgress, isGps, geolocate, isAlertOpen, isTelemtryOpen } = useSelector(
+		(state) => state.map,
+	);
 	const [stopwatch] = useTimer();
 	const [timer] = useTimer({
-		startValues: { seconds: 3 },
+		startValues: { seconds: 4 },
 		target: { seconds: 0 },
 		countdown: true,
 	});
-
-	function correctTimeDisplay() {
-		let { hours, minutes, seconds } = stopwatch.getTimeValues();
-		hours = hours < 10 ? `0${hours}` : hours;
-		minutes = minutes < 10 ? `0${minutes}` : minutes;
-		seconds = seconds < 10 ? `0${seconds}` : seconds;
-		return `${hours}:${minutes}:${seconds}`;
-	}
 
 	function closeDrawer() {
 		dispatch(setMapDrawer(false));
 	}
 
-	function toggleTelemetryHeight() {
-		if (!stopwatch.isRunning()) return;
-		setIsFullTelemetry(!isFullTelemtry);
-	}
-
 	return (
 		<Box
+			zIndex="100"
+			color={color}
+			bg={bg}
 			userSelect="none"
 			position="absolute"
 			opacity={isDrawerOpen ? 1 : 0}
@@ -47,26 +40,14 @@ export default function Map() {
 			transitionDuration="200ms"
 			h="100vh"
 			w="100%">
-			<IconButton
-				icon={<FaChevronDown />}
-				onClick={closeDrawer}
-				position="absolute"
-				left="1"
-				top="1"
-				color="gray.900"
-			/>
-			<Telemetry
-				correctTimeDisplay={correctTimeDisplay}
-				stopwatch={stopwatch}
-				currentHeight={isFullTelemtry ? "20vh" : "10vh"}
-				toggleHeight={toggleTelemetryHeight}
-			/>
-			<Box h={isFullTelemtry ? "80vh" : "90vh"} transitionDuration="200ms" position="relative">
+			<IconButton icon={<FaChevronDown />} onClick={closeDrawer} position="absolute" left="1" top="1" />
+			<Telemetry stopwatch={stopwatch} currentHeight={isTelemtryOpen ? "20vh" : "10vh"} />
+			<Box h={isTelemtryOpen ? "80vh" : "90vh"} transitionDuration="200ms" position="relative">
 				<Box ref={mapRef} h="100%" />
 				{(isPaused || !isRunInProgress) && (
 					<Center
 						zIndex="10"
-						bg={isPaused ? "rgba(0,0,0,0.75)" : "gray.800"}
+						bg={isPaused ? "rgba(0,0,0,0.75)" : bg}
 						position="absolute"
 						h="100%"
 						w="100%"
@@ -91,14 +72,11 @@ export default function Map() {
 					color={isGps === false ? "gray.800" : isGps === "error" ? "red.400" : "green.400"}
 					icon={isGps === false ? <MdGpsNotFixed /> : isGps === "error" ? <MdGpsOff /> : <MdGpsFixed />}
 				/>
-				<RunControls
-					correctTimeDisplay={correctTimeDisplay}
-					stopwatch={stopwatch}
-					timer={timer}
-					mapContainerRef={mapRef}
-				/>
+				<RunControls stopwatch={stopwatch} timer={timer} mapContainer={mapRef.current} />
 			</Box>
-			<AlertModal timer={timer} stopwatch={stopwatch} />
+			{isAlertOpen && <AlertModal timer={timer} stopwatch={stopwatch} />}
 		</Box>
 	);
 }
+
+export default memo(Map);

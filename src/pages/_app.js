@@ -1,4 +1,4 @@
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, ColorModeScript, theme } from "@chakra-ui/react";
 import "@fontsource/play/400.css";
 import { Provider as StoreProvider } from "react-redux";
 import AuthProvider from "../context/AuthProvider";
@@ -10,6 +10,7 @@ function MyApp({ Component, pageProps }) {
 	return (
 		<StoreProvider store={store}>
 			<ChakraProvider theme={global}>
+				<ColorModeScript initialColorMode={theme.config.initialColorMode} />
 				<DataProvider>
 					<AuthProvider>
 						<Component {...pageProps} />

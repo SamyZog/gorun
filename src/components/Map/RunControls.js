@@ -3,7 +3,7 @@ import { lineString } from "@turf/helpers";
 import length from "@turf/length";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPlayFill, BsStopFill } from "react-icons/bs";
 import { TiRefresh } from "react-icons/ti";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,8 +11,10 @@ import { setCoords, setDistance, setDuration, setStartTime } from "../../store/d
 import { setAlertState, setGeolocate, setGps, setMap, setPause, setRunState } from "../../store/map/map";
 import { displayToast } from "../../utils/helpers";
 
-export default function RunControls({ stopwatch, timer, mapContainerRef, correctTimeDisplay }) {
+function RunControls(props) {
+	const { timer, stopwatch, mapContainer } = props;
 	const { isGps, map, isRunInProgress, isPaused, geolocate } = useSelector((state) => state.map);
+	const [countdownPhase, setCountdownPhase] = useState(false);
 	const { coords } = useSelector((state) => state.data);
 	const dispatch = useDispatch();
 	const toast = useToast();
@@ -22,7 +24,7 @@ export default function RunControls({ stopwatch, timer, mapContainerRef, correct
 	function initiateMap(longitude, latitude) {
 		mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
 		const map = new mapboxgl.Map({
-			container: mapContainerRef.current,
+			container: mapContainer,
 			style: "mapbox://styles/samyzog/cks4euoh03az218kcmg5g1elw",
 			center: [longitude, latitude],
 			zoom: 17.5,
@@ -69,50 +71,49 @@ export default function RunControls({ stopwatch, timer, mapContainerRef, correct
 	}
 
 	function start() {
-		runRef.current && stopwatch.start();
-		dispatch(setPause(false));
-		navigator.geolocation.clearWatch(watchRef.current);
-		watchRef.current = navigator.geolocation.watchPosition(success, error);
-	}
-
-	function timerTargetAchieved() {
-		dispatch(setStartTime(Date.now()));
-		stopwatch.start();
-		dispatch(setRunState(true));
-		start();
-	}
-
-	function pause() {
-		stopwatch.pause();
-		dispatch(setPause(true));
-		navigator.geolocation.clearWatch(watchRef.current);
-	}
-
-	function resume() {
-		start();
-	}
-
-	function stop() {
-		dispatch(setDuration(correctTimeDisplay()));
-		dispatch(setAlertState(true));
-	}
-
-	function success({ coords }) {
-		console.log(runRef.current);
-		if (isGps === "error") {
-			if (runRef.current) {
-				geolocate.trigger();
-			}
-			dispatch(setGps(true));
-		}
-		const { longitude, latitude } = coords;
-		if (!runRef.current) {
+		navigator.geolocation.getCurrentPosition(({ coords: { longitude, latitude } }) => {
 			dispatch(setGps(true));
 			initiateMap(longitude, latitude);
 			timer.start();
-			return;
+			dispatch(setStartTime(Date.now()));
+			setCountdownPhase(true);
+		}, error);
+	}
+
+	function pause() {
+		dispatch(setPause(true));
+		navigator.geolocation.clearWatch(watchRef.current);
+		stopwatch.pause();
+	}
+
+	function resume() {
+		dispatch(setPause(false));
+		if (!runRef.current) {
+			start();
+		} else {
+			timerTargetAchieved();
 		}
-		console.log("zabre");
+	}
+
+	function stop() {
+		navigator.geolocation.clearWatch(watchRef.current);
+		let { hours, minutes, seconds } = stopwatch.getTimeValues();
+		hours = hours < 10 ? `0${hours}` : hours;
+		minutes = minutes < 10 ? `0${minutes}` : minutes;
+		seconds = seconds < 10 ? `0${seconds}` : seconds;
+		dispatch(setDuration(`${hours}:${minutes}:${seconds}`));
+		dispatch(setAlertState(true));
+	}
+
+	function timerTargetAchieved() {
+		setCountdownPhase(false);
+		dispatch(setRunState(true));
+		watchRef.current = navigator.geolocation.watchPosition(success, error);
+		stopwatch.start();
+	}
+
+	function success({ coords: { longitude, latitude } }) {
+		dispatch(setGps(true));
 		dispatch(setCoords([longitude, latitude]));
 	}
 
@@ -149,19 +150,15 @@ export default function RunControls({ stopwatch, timer, mapContainerRef, correct
 
 	useEffect(() => {
 		runRef.current = isRunInProgress;
-
-		timer.on("targetAchieved", timerTargetAchieved);
-
-		return () => {
-			timer.removeAllEventListeners();
-		};
+		timer.addEventListener("targetAchieved", timerTargetAchieved);
+		return () => timer.removeEventListener("targetAchieved", timerTargetAchieved);
 	}, [isRunInProgress]);
 
 	return (
-		<HStack zIndex="10" position="absolute" bottom="5vh" left="50%" transform="translateX(-50%)">
+		<HStack zIndex="10" position="absolute" bottom="5vh" left="50%" transform="translateX(-50%)" spacing="3vw">
 			{isGps !== "error" && (
 				<>
-					{!isRunInProgress && !timer.isRunning() && (
+					{!isRunInProgress && !countdownPhase && (
 						<Button fontSize="5vh" borderRadius="full" h="15vh" w="15vh" onClick={start}>
 							GO
 						</Button>
@@ -192,8 +189,17 @@ export default function RunControls({ stopwatch, timer, mapContainerRef, correct
 				<IconButton fontSize="5vh" borderRadius="full" h="15vh" w="15vh" icon={<BsStopFill />} onClick={stop} />
 			)}
 			{isGps === "error" && (
-				<IconButton fontSize="5vh" borderRadius="full" h="15vh" w="15vh" icon={<TiRefresh />} onClick={start} />
+				<IconButton
+					fontSize="5vh"
+					borderRadius="full"
+					h="15vh"
+					w="15vh"
+					icon={<TiRefresh />}
+					onClick={resume}
+				/>
 			)}
 		</HStack>
 	);
 }
+
+export default memo(RunControls);

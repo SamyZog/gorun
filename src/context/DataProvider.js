@@ -1,5 +1,5 @@
 import { useToast } from "@chakra-ui/react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, memo, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { firebase } from "../firebase/firebase";
 import { deleteRun, setFetchedHistory } from "../store/history/history";
@@ -9,7 +9,7 @@ import { displayToast } from "../utils/helpers";
 const dataContext = createContext();
 const { Provider: Data } = dataContext;
 
-export default function DataProvider(props) {
+function DataProvider(props) {
 	const { user } = useSelector((state) => state.auth);
 	const [isLoading, setIsLoading] = useState(true);
 	const dispatch = useDispatch();
@@ -62,8 +62,10 @@ export default function DataProvider(props) {
 				}
 				try {
 					const docRef = firebase.firestore().collection("users").doc(user.uid);
-					const doc = await docRef.get();
-					dispatch(setFetchedHistory(doc.data()));
+					const doc = await docRef.get(user.uid);
+					if (doc.exists) {
+						dispatch(setFetchedHistory(doc.data()));
+					}
 					setIsLoading(false);
 				} catch ({ message }) {
 					displayToast(toast, 1, "error", message);
@@ -83,3 +85,5 @@ export default function DataProvider(props) {
 }
 
 export const useData = () => useContext(dataContext);
+
+export default memo(DataProvider);

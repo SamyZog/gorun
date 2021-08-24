@@ -6,8 +6,10 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	Button,
+	useColorModeValue,
 	useToast,
 } from "@chakra-ui/react";
+import { memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useData } from "../../context/DataProvider";
 import { resetDataState } from "../../store/data/data";
@@ -15,9 +17,11 @@ import { setRunHistory } from "../../store/history/history";
 import { resetMapState, setAlertState } from "../../store/map/map";
 import { displayToast } from "../../utils/helpers";
 
-export default function AlertModal({ timer, stopwatch }) {
+function AlertModal({ timer, stopwatch }) {
+	const bg = useColorModeValue("gray.400", "gray.900");
+	const color = useColorModeValue("gray.900", "gray.400");
 	const { postRun } = useData();
-	const { isAlertOpen, map, geolocate } = useSelector((state) => state.map);
+	const { isAlertOpen, map, geolocate, isRunInProgress } = useSelector((state) => state.map);
 	const { distance, duration, startTime } = useSelector((state) => state.data);
 	const dispatch = useDispatch();
 	const toast = useToast();
@@ -31,22 +35,24 @@ export default function AlertModal({ timer, stopwatch }) {
 		stopwatch.stop();
 		map.removeControl(geolocate);
 		map.remove();
-		dispatch(resetMapState());
-		dispatch(resetDataState());
 	}
 
 	async function endRun() {
 		try {
-			await postRun();
-			resetAll();
-			dispatch(setRunHistory([startTime, { distance, duration, startTime }]));
+			if (isRunInProgress) {
+				await postRun();
+				resetAll();
+				dispatch(setRunHistory([startTime, { distance, duration, startTime }]));
+			}
+			dispatch(resetMapState());
+			dispatch(resetDataState());
 		} catch ({ message }) {
 			displayToast(toast, 1, "error", message);
 		}
 	}
 
 	return (
-		<AlertDialog isOpen={isAlertOpen} onClose={closeAlertBox}>
+		<AlertDialog isOpen={isAlertOpen} onClose={closeAlertBox} color={color} bg={bg} isCentered={true} ml={3} mr={3}>
 			<AlertDialogContent>
 				<AlertDialogCloseButton />
 				<AlertDialogHeader>End Run?</AlertDialogHeader>
@@ -61,3 +67,5 @@ export default function AlertModal({ timer, stopwatch }) {
 		</AlertDialog>
 	);
 }
+
+export default memo(AlertModal);

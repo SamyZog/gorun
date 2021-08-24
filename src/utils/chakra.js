@@ -2,7 +2,6 @@ import { extendTheme } from "@chakra-ui/react";
 
 export default global = extendTheme({
 	initialColorMode: "dark",
-	useSystemColorMode: false,
 	fonts: {
 		heading: "Play",
 	},

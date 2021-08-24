@@ -8,6 +8,8 @@ import {
 	InputRightAddon,
 	Text,
 	Tooltip,
+	useColorMode,
+	useColorModeValue,
 	useToast,
 	VStack,
 } from "@chakra-ui/react";
@@ -20,6 +22,9 @@ import { setEmailInputValue, setSubmitButtonState } from "../../store/auth/auth"
 import { displayToast } from "../../utils/helpers";
 
 export default function SignUpForm() {
+	const { colorMode, toggleColorMode } = useColorMode();
+	const bg = useColorModeValue("gray.400", "gray.900");
+	const color = useColorModeValue("gray.900", "gray.400");
 	const inputRef = useRef();
 	const router = useRouter();
 	const toast = useToast();
@@ -82,6 +87,7 @@ export default function SignUpForm() {
 				<VStack spacing="20px">
 					<InputGroup w="100%">
 						<Input
+							_placeholder={{ color, opacity: 0.5 }}
 							ref={inputRef}
 							type="email"
 							placeholder="Email"

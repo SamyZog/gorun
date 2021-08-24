@@ -1,5 +1,5 @@
 import { setCookie } from "nookies";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, memo, useContext, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { firebase } from "../firebase/firebase";
 import { setUser } from "../store/auth/auth";
@@ -7,7 +7,7 @@ import { setUser } from "../store/auth/auth";
 const authContext = createContext();
 const { Provider: Auth } = authContext;
 
-export default function AuthProvider(props) {
+function AuthProvider(props) {
 	const dispatch = useDispatch();
 
 	async function sendEmailLink(email) {
@@ -65,3 +65,5 @@ export default function AuthProvider(props) {
 }
 
 export const useAuth = () => useContext(authContext);
+
+export default memo(AuthProvider);

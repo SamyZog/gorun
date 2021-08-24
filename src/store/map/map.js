@@ -8,9 +8,15 @@ const SET_GEOLOCATE = "map/set_geolocate";
 const SET_RUN_STATE = "map/set_run_start";
 const SET_PAUSE = "map/set_pause";
 const RESET_MAP_STATE = "map/reset_map_state";
+const SET_TELEMETRY_STATE = "map/set_telemetry_state";
 
 export const setMapDrawer = (payload) => ({
 	type: SET_DRAWER_STATE,
+	payload,
+});
+
+export const setTelemetryState = (payload) => ({
+	type: SET_TELEMETRY_STATE,
 	payload,
 });
 
@@ -51,6 +57,7 @@ export const resetMapState = (payload) => ({
 
 const mapState = {
 	isDrawerOpen: false,
+	isTelemtryOpen: false,
 	isAlertOpen: false,
 	isGps: false,
 	map: null,
@@ -64,6 +71,10 @@ export function mapReducer(state = mapState, action) {
 		case SET_DRAWER_STATE:
 			return produce(state, (draft) => {
 				draft.isDrawerOpen = action.payload;
+			});
+		case SET_TELEMETRY_STATE:
+			return produce(state, (draft) => {
+				draft.isTelemtryOpen = action.payload;
 			});
 		case SET_GPS:
 			return produce(state, (draft) => {
