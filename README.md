@@ -8,7 +8,7 @@
 -   [Run locally](#run)
 -   [Authors](#authors)
 
-<h2 id="title">GORUN</h2>
+<h2 id="title">GORUN 🏃</h2>
 
 Run tracker with realtime GPS map display, tracks and records run distance and duration.
 
