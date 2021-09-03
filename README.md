@@ -22,15 +22,15 @@ This web app is hosted on [Vercel](https://vercel.com/)
 
 <h2 id="deps">Tech Stack / Dependencies</h2>
 
--   [NextJS](https://nextjs.org/)
--   [React](https://reactjs.org/)
--   [Redux](https://redux.js.org/)
--   [React-Redux](https://react-redux.js.org/)
--   [Chakra-ui](https://sass-lang.com/)
+-   [next.js](https://nextjs.org/)
+-   [react](https://reactjs.org/)
+-   [redux](https://redux.js.org/)
+-   [react-redux](https://react-redux.js.org/)
+-   [chakra-ui](https://sass-lang.com/)
 -   [mapbox-gl](https://docs.mapbox.com/mapbox-gl-js/guides/)
--   [Easytimer.js](https://albert-gonzalez.github.io/easytimer.js/)
--   [Firebase](https://console.firebase.google.com/)
--   [Immer](https://immerjs.github.io/immer/)
+-   [easytimer.js](https://albert-gonzalez.github.io/easytimer.js/)
+-   [firebase](https://console.firebase.google.com/)
+-   [immer](https://immerjs.github.io/immer/)
 -   [nookies](https://github.com/maticzav/nookies)
 
 <h2 id="features">Features</h2>
