@@ -10,7 +10,7 @@
 
 <h2 id="title">GORUN 🏃</h2>
 
-Run tracker with realtime GPS map display, tracks and records run distance and duration.
+An app for tracking outdoor runs with real-time GPS map display. It lets users track and record run distance and duration. Built with next.js, firebase and the mapbox API.
 
 <h2 id="demo">Demo</h2>
 
